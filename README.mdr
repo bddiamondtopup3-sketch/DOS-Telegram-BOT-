@@ -45,7 +45,7 @@ Persistent WS connections with 1MB/s payload bombardment
 1. Clone the repository to your local machine:
 
     ```bash
-    git clone https://github.com/Mustafa1p/DDOS-Telegram-BOT.git
+    git clone https://github.com/CDOR/DDOS-Telegram-BOT.git
     ```
 
 2. Obtain your Telegram API token and replace `YOUR_TOKEN_HERE` in the script with your actual token.
