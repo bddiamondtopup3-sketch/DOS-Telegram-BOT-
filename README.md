@@ -48,9 +48,9 @@ Persistent WS connections with 1MB/s payload bombardment
     git clone https://github.com/Mustafa1p/DDOS-Telegram-BOT.git
     ```
 
-2. Obtain your Telegram API token and replace `YOUR_TOKEN_HERE` in the script with your actual token.
+2. Obtain your Telegram API token and replace `8772166036:AAGG0uEv0UoztbZ-YvwAAY0eU5qDMuSa8RY` in the script with your actual token.
 
-3. Set your admin chat ID in the `ADMIN_CHAT_ID` variable to receive error notifications.
+3. Set your admin chat ID in the `8871435838` variable to receive error notifications.
 
 ## Usage
 
