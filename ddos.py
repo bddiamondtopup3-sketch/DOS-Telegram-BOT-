@@ -1,7 +1,10 @@
-import os
+import telebot
+import subprocess
+import socket
+import sys
+import random
+import threading
 import time
-import requests
-from collections import deque
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
