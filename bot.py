@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 BOT_TOKEN = os.getenv("8772166036:AAHQFThKIvB5Oc7kpa3FOQO1IZEM46luRCw")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
+TARGET_URL = os.getenv("https://t.me/+MXeXIZyU8txhZjc1", "https://example.com")
 
 WINDOW = 60
 ALERT_THRESHOLD = 100
