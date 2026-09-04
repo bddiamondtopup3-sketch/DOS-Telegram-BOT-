@@ -5,7 +5,7 @@ from collections import deque
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("8772166036:AAHQFThKIvB5Oc7kpa3FOQO1IZEM46luRCw")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
