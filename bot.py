@@ -4,50 +4,55 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# আপনার দেওয়া ইনফো
+# আপনার দেওয়া টোকেন এবং চ্যাট আইডি সরাসরি বসানো হলো
 BOT_TOKEN = "8933321937:AAHYwCWFAkmi0Q8taHhYrWImaA75KsG6mC4"
-CHAT_ID = -1003945796522  # চ্যাট আইডি (প্রয়োজনে অ্যাডমিন চেক করতে পারেন)
+CHAT_ID = -1003945796522  
 
 DATA_FILE = "users.json"
 
-# ইউজার ডেটা লোড বা সেভ করার ফাংশন
+# ডাটাবেজ/ফাইল থেকে ইউজার ডেটা লোড করার ফাংশন
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {}
     try:
-        with open(DATA_FILE, "r") as f:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except Exception as e:
+        print(f"Error loading data: {e}")
         return {}
 
+# ডাটাবেজ/ফাইলে ইউজার ডেটা সেভ করার ফাংশন
 def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+    try:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error saving data: {e}")
 
-# /start কমান্ড
+# ১. /start কমান্ড
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_text = (
         "⚡ **Ultra Boost User Management Bot** ⚡\n\n"
-        "🛠 **Commands:**\n"
-        "• /adduser `username` `password` `days` - নতুন ইউজার ও মেয়াদ তৈরি করুন\n"
-        "• /users - মোট ইউজারের তালিকা ও মেয়াদ দেখুন\n"
-        "• /block `username` - ইউজার ব্লক/রিমুভ করুন\n"
+        "🛠 **Available Commands:**\n"
+        "• `/adduser username password days` - নতুন ইউজার ও মেয়াদের দিন সেট করুন\n"
+        "• `/users` - মোট ইউজার তালিকা ও মেয়াদ দেখুন\n"
+        "• `/block username` - ইউজার ব্লক এবং ডিলিট করুন\n"
     )
     await update.message.reply_text(help_text, parse_mode="Markdown")
 
-# নতুন ইউজার ও পাসওয়ার্ড তৈরি: /adduser user pass days
+# ২. /adduser কমান্ড (ইউজার তৈরি: /adduser user pass days)
 async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) < 3:
-        await update.message.reply_text("❌ সঠিক নিয়ম: `/adduser username password days`", parse_mode="Markdown")
+        await update.message.reply_text("❌ **সঠিক নিয়ম:** `/adduser username password days`", parse_mode="Markdown")
         return
 
-    username = args[0]
-    password = args[1]
+    username = args[0].strip()
+    password = args[1].strip()
     try:
         days = int(args[2])
     except ValueError:
-        await update.message.reply_text("❌ দিন সংখ্যা (days) অবশ্যই সংখ্যা হতে হবে!")
+        await update.message.reply_text("❌ **মেয়াদের দিন সংখ্যা অবশ্যই সংখ্যা (Number) হতে হবে!**", parse_mode="Markdown")
         return
 
     data = load_data()
@@ -62,51 +67,62 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ **User Created Successfully!**\n\n"
-        f"👤 Username: `{username}`\n"
-        f"🔑 Password: `{password}`\n"
-        f"⏳ Validity: {days} Days (Exp: {expiry_date})",
+        f"👤 **Username:** `{username}`\n"
+        f"🔑 **Password:** `{password}`\n"
+        f"⏳ **Validity:** {days} Days\n"
+        f"📅 **Expiry Date:** `{expiry_date}`",
         parse_mode="Markdown"
     )
 
-# মোট ইউজার দেখার তালিকা: /users
+# ৩. /users কমান্ড (ইউজারদের তালিকা)
 async def list_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
     if not data:
-        await update.message.reply_text("📂 কোনো ইউজার নেই!")
+        await update.message.reply_text("📂 **কোনো ইউজার পাওয়া যায়নি!**", parse_mode="Markdown")
         return
 
-    msg = f"📊 **Total Users: {len(data)}**\n\n"
+    msg = f"📊 **Total Active Users: {len(data)}**\n\n"
     for user, info in data.items():
-        msg += f"• **User:** `{user}`\n  **Pass:** `{info['password']}`\n  **Exp:** {info['expiry']}\n  **Status:** {info['status']}\n\n"
+        msg += (
+            f"👤 **User:** `{user}`\n"
+            f"🔑 **Pass:** `{info['password']}`\n"
+            f"📅 **Exp:** `{info['expiry']}`\n"
+            f"⚡ **Status:** {info['status']}\n"
+            f"-------------------------\n"
+        )
 
     await update.message.reply_text(msg, parse_mode="Markdown")
 
-# ইউজার ব্লক বা রিমুভ করা: /block username
+# ৪. /block কমান্ড (ইউজার ব্লক ও রিমুভ করা: /block username)
 async def block_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if not args:
-        await update.message.reply_text("❌ সঠিক নিয়ম: `/block username`", parse_mode="Markdown")
+        await update.message.reply_text("❌ **সঠিক নিয়ম:** `/block username`", parse_mode="Markdown")
         return
 
-    username = args[0]
+    username = args[0].strip()
     data = load_data()
 
     if username in data:
-        del data[username] # ডাটাবেজ থেকে রিমুভ করে দেওয়া
+        del data[username]  # ফাইল থেকে সম্পূর্ণ রিমুভ ও ব্লক
         save_data(data)
-        await update.message.reply_text(f"🗑️ User `{username}` সফলভাবে রিমুভ ও ব্লক করা হয়েছে!", parse_mode="Markdown")
+        await update.message.reply_text(f"🚫 **User `{username}` সফলভাবে ব্লক এবং রিমুভ করা হয়েছে!**", parse_mode="Markdown")
     else:
-        await update.message.reply_text(f"❌ `{username}` নামের কোনো ইউজার পাওয়া যায়নি!")
+        await update.message.reply_text(f"❌ **`{username}` নামের কোনো ইউজার খুঁজে পাওয়া যায়নি!**", parse_mode="Markdown")
 
 def main():
+    if not BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN is missing!")
+
     app = Application.builder().token(BOT_TOKEN).build()
 
+    # কমান্ড হ্যান্ডলারসমূহ
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("adduser", add_user))
     app.add_handler(CommandHandler("users", list_users))
     app.add_handler(CommandHandler("block", block_user))
 
-    print("🤖 Admin Control Bot started...")
+    print("🤖 Ultra Boost Admin Bot is running...")
     app.run_polling()
 
 if __name__ == "__main__":
