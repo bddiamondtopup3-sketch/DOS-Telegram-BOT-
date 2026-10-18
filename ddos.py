@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# আপনার দেওয়া টোকেন এবং চ্যাট আইডি সরাসরি বসানো হলো
+# আপনার টোকেন এবং চ্যাট আইডি
 BOT_TOKEN = "8933321937:AAHYwCWFAkmi0Q8taHhYrWImaA75KsG6mC4"
 CHAT_ID = -1003945796522  
 
 DATA_FILE = "users.json"
 
-# ডাটাবেজ/ফাইল থেকে ইউজার ডেটা লোড করার ফাংশন
+# ডাটাবেজ লোড করার ফাংশন
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {}
@@ -21,7 +21,7 @@ def load_data():
         print(f"Error loading data: {e}")
         return {}
 
-# ডাটাবেজ/ফাইলে ইউজার ডেটা সেভ করার ফাংশন
+# ডাটাবেজ সেভ করার ফাংশন
 def save_data(data):
     try:
         with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -40,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(help_text, parse_mode="Markdown")
 
-# ২. /adduser কমান্ড (ইউজার তৈরি: /adduser user pass days)
+# ২. /adduser কমান্ড
 async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) < 3:
@@ -74,7 +74,7 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-# ৩. /users কমান্ড (ইউজারদের তালিকা)
+# ৩. /users কমান্ড
 async def list_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
     if not data:
@@ -93,7 +93,7 @@ async def list_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(msg, parse_mode="Markdown")
 
-# ৪. /block কমান্ড (ইউজার ব্লক ও রিমুভ করা: /block username)
+# ৪. /block কমান্ড
 async def block_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if not args:
@@ -104,7 +104,7 @@ async def block_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
 
     if username in data:
-        del data[username]  # ফাইল থেকে সম্পূর্ণ রিমুভ ও ব্লক
+        del data[username]  
         save_data(data)
         await update.message.reply_text(f"🚫 **User `{username}` সফলভাবে ব্লক এবং রিমুভ করা হয়েছে!**", parse_mode="Markdown")
     else:
@@ -116,7 +116,6 @@ def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # কমান্ড হ্যান্ডলারসমূহ
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("adduser", add_user))
     app.add_handler(CommandHandler("users", list_users))
