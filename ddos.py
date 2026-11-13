@@ -1,114 +1,35 @@
 import os
-import json
-from datetime import datetime, timedelta
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import random
+from telegram import Update, ReactionTypeEmoji
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
-# আপনার টোকেন এবং চ্যাট আইডি
-BOT_TOKEN = "8933321937:AAHYwCWFAkmi0Q8taHhYrWImaA75KsG6mC4"
-CHAT_ID = -1003945796522  
+# আপনার টেলিগ্রাম বট টোকেন
+BOT_TOKEN = "9052736500:AAG4GcgVy7T6RNjzpj5lA95MP7RDabvQ0Uc"  
 
-DATA_FILE = "users.json"
+# আপনার পছন্দের ইমোজি লিস্ট (এখান থেকে যেকোনো একটি রেন্ডমলি সিলেক্ট হবে)
+MY_EMOJIS = ["👍", "❤️", "🔥", "🥰", "⚡", "🏆", "💔", "😍"]
 
-# ডাটাবেজ লোড করার ফাংশন
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {}
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        return {}
-
-# ডাটাবেজ সেভ করার ফাংশন
-def save_data(data):
-    try:
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving data: {e}")
-
-# ১. /start কমান্ড
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    help_text = (
-        "⚡ **Ultra Boost User Management Bot** ⚡\n\n"
-        "🛠 **Available Commands:**\n"
-        "• `/adduser username password days` - নতুন ইউজার ও মেয়াদের দিন সেট করুন\n"
-        "• `/users` - মোট ইউজার তালিকা ও মেয়াদ দেখুন\n"
-        "• `/block username` - ইউজার ব্লক এবং ডিলিট করুন\n"
-    )
-    await update.message.reply_text(help_text, parse_mode="Markdown")
-
-# ২. /adduser কমান্ড
-async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    args = context.args
-    if len(args) < 3:
-        await update.message.reply_text("❌ **সঠিক নিয়ম:** `/adduser username password days`", parse_mode="Markdown")
+# অটো রিঅ্যাকশন হ্যান্ডলার
+async def auto_react(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # যদি মেসেজ বা চ্যাট না থাকে, তবে স্কিপ করবে
+    if not update.message or not update.message.chat:
         return
 
-    username = args[0].strip()
-    password = args[1].strip()
+    # লিস্ট থেকে র‍্যান্ডম ইমোজি সিলেক্ট করা (আপনার জাভাস্ক্রিপ্ট কোডের মতো)
+    do_emoji = random.choice(MY_EMOJIS)
+
+    chat_id = update.message.chat_id
+    message_id = update.message.message_id
+
     try:
-        days = int(args[2])
-    except ValueError:
-        await update.message.reply_text("❌ **মেয়াদের দিন সংখ্যা অবশ্যই সংখ্যা (Number) হতে হবে!**", parse_mode="Markdown")
-        return
-
-    data = load_data()
-    expiry_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
-
-    data[username] = {
-        "password": password,
-        "expiry": expiry_date,
-        "status": "Active"
-    }
-    save_data(data)
-
-    await update.message.reply_text(
-        f"✅ **User Created Successfully!**\n\n"
-        f"👤 **Username:** `{username}`\n"
-        f"🔑 **Password:** `{password}`\n"
-        f"⏳ **Validity:** {days} Days\n"
-        f"📅 **Expiry Date:** `{expiry_date}`",
-        parse_mode="Markdown"
-    )
-
-# ৩. /users কমান্ড
-async def list_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = load_data()
-    if not data:
-        await update.message.reply_text("📂 **কোনো ইউজার পাওয়া যায়নি!**", parse_mode="Markdown")
-        return
-
-    msg = f"📊 **Total Active Users: {len(data)}**\n\n"
-    for user, info in data.items():
-        msg += (
-            f"👤 **User:** `{user}`\n"
-            f"🔑 **Pass:** `{info['password']}`\n"
-            f"📅 **Exp:** `{info['expiry']}`\n"
-            f"⚡ **Status:** {info['status']}\n"
-            f"-------------------------\n"
+        # টেলিগ্রাম এপিআই ব্যবহার করে মেসেজে রিঅ্যাকশন পাঠানো
+        await context.bot.set_message_reaction(
+            chat_id=chat_id,
+            message_id=message_id,
+            reaction=[ReactionTypeEmoji(emoji=do_emoji, is_big=True)]
         )
-
-    await update.message.reply_text(msg, parse_mode="Markdown")
-
-# ৪. /block কমান্ড
-async def block_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    args = context.args
-    if not args:
-        await update.message.reply_text("❌ **সঠিক নিয়ম:** `/block username`", parse_mode="Markdown")
-        return
-
-    username = args[0].strip()
-    data = load_data()
-
-    if username in data:
-        del data[username]  
-        save_data(data)
-        await update.message.reply_text(f"🚫 **User `{username}` সফলভাবে ব্লক এবং রিমুভ করা হয়েছে!**", parse_mode="Markdown")
-    else:
-        await update.message.reply_text(f"❌ **`{username}` নামের কোনো ইউজার খুঁজে পাওয়া যায়নি!**", parse_mode="Markdown")
+    except Exception as e:
+        print(f"Failed to send reaction: {e}")
 
 def main():
     if not BOT_TOKEN:
@@ -116,12 +37,10 @@ def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("adduser", add_user))
-    app.add_handler(CommandHandler("users", list_users))
-    app.add_handler(CommandHandler("block", block_user))
+    # কোনো কমান্ড নেই, গ্রুপ বা চ্যাটে যেকোনো মেসেজ আসলেই অটো রিঅ্যাকশন দেবে
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, auto_react))
 
-    print("🤖 Ultra Boost Admin Bot is running...")
+    print("🤖 Auto Reaction Bot is running successfully...")
     app.run_polling()
 
 if __name__ == "__main__":
